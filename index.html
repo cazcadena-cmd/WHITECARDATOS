@@ -2,8 +2,40 @@
 <html lang="es" class="h-full bg-slate-900">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Operación y Seguridad Vial - Flota 52 Servicio Especial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>White Car GPS | Indicadores de Operación y Seguridad Vial - Servicio Especial</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#67B7BE">
+    <meta name="application-name" content="White Car GPS">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="White Car GPS">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png">
+
+    <!-- Vista previa al compartir (WhatsApp / Facebook / Telegram / X) -->
+    <meta name="description" content="Indicadores de Operación y Seguridad Vial en tiempo real: kilometraje, desplazamientos, excesos de velocidad y jornada. Flota de Servicio Especial monitoreada por GPS.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="White Car GPS">
+    <meta property="og:locale" content="es_CO">
+    <meta property="og:url" content="https://cazcadena-cmd.github.io/WHITECARDATOS/">
+    <meta property="og:title" content="White Car GPS 🚐 Indicadores de Operación & Seguridad Vial">
+    <meta property="og:description" content="📊 Kilometraje, viajes, excesos de velocidad y jornada de tu flota de Servicio Especial. Reportes en Excel al instante. ¡Instala la app!">
+    <meta property="og:image" content="https://cazcadena-cmd.github.io/WHITECARDATOS/icon-512.png">
+    <meta property="og:image:secure_url" content="https://cazcadena-cmd.github.io/WHITECARDATOS/icon-512.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:image:alt" content="Logo White Car GPS">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="White Car GPS | Indicadores de Operación & Seguridad Vial">
+    <meta name="twitter:description" content="Kilometraje, viajes, excesos de velocidad y jornada de tu flota. Reportes en Excel al instante.">
+    <meta name="twitter:image" content="https://cazcadena-cmd.github.io/WHITECARDATOS/icon-512.png">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome CDN -->
@@ -67,6 +99,33 @@
         .brand-glow {
             box-shadow: 0 0 20px rgba(103, 183, 190, 0.25);
         }
+        /* ---- Adiciones ---- */
+        .wc-badge {
+            background: linear-gradient(135deg, #ffffff 0%, #e0f4f5 100%);
+            color: #1e3a3a;
+            box-shadow: 0 2px 12px rgba(103, 183, 190, 0.45);
+        }
+        .modal-backdrop {
+            background: rgba(2, 6, 23, 0.72);
+            backdrop-filter: blur(6px);
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(24px) scale(.94); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .pop-in { animation: popIn .38s cubic-bezier(.2,.9,.3,1.2) both; }
+        @keyframes floatLogo {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .float-logo { animation: floatLogo 3s ease-in-out infinite; }
+        @keyframes toastIn {
+            0% { opacity: 0; transform: translate(-50%, 16px); }
+            100% { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .toast-in { animation: toastIn .3s ease both; }
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased">
@@ -79,16 +138,20 @@
                         <i class="fa-solid fa-bus-simple text-2xl"></i>
                     </div>
                     <div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-white">
                                 Indicadores de Operación & Seguridad Vial
+                                <span class="wc-badge inline-flex items-center gap-1.5 align-middle ml-1 px-2.5 py-0.5 rounded-lg text-sm md:text-base font-black tracking-wide">
+                                    <i class="fa-solid fa-satellite-dish text-brand-600 text-xs"></i> WHITE CAR GPS
+                                </span>
                             </h1>
                             <span class="bg-brand-400/20 text-brand-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-brand-400/30">
                                 Servicio Especial
                             </span>
                         </div>
                         <p class="text-slate-400 text-xs mt-0.5">
-                            Monitoreo de la Flota Activa (52 Vehículos - Placa Blanca) | Pico & Placa 1 día/semana
+                            Monitoreo de la Flota Activa (<span class="fleet-count">52</span> Vehículos - Placa Blanca) | Pico & Placa 1 día/semana
+                            <span class="ml-1 text-brand-300"><i class="fa-regular fa-clock"></i> Hoy: <span id="todayLabel"></span></span>
                         </p>
                     </div>
                 </div>
@@ -159,12 +222,83 @@
                 </div>
             </div>
 
+            <!-- Estado del período (fecha real) -->
+            <div id="periodStatus" class="mt-4"></div>
+
             <!-- Regla Explicativa -->
             <div class="mt-4 p-3 bg-slate-800/60 rounded-xl border border-slate-700/50 text-xs text-slate-300 flex items-start gap-2.5">
                 <i class="fa-solid fa-circle-info text-brand-400 text-sm mt-0.5"></i>
                 <div>
                     <strong class="text-brand-300 font-semibold">Normativa de Pico y Placa Servicio Especial:</strong> Cada vehículo tiene restricción un único día a la semana (Lunes a Viernes) según el último dígito numérico de la placa: <strong>1-2 (Lun), 3-4 (Mar), 5-6 (Mié), 7-8 (Jue), 9-0 (Vie)</strong>. Sábados y Domingos se encuentran habilitados.
                 </div>
+            </div>
+        </section>
+
+        <!-- NUEVO: Gestión de Flota y Variables -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Añadir vehículo -->
+            <div class="glass-card rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-lg brand-gradient flex items-center justify-center"><i class="fa-solid fa-car-on text-white text-xs"></i></span>
+                        Añadir Vehículo a la Flota
+                    </h3>
+                    <span class="text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">Cuenta desde su fecha de ingreso</span>
+                </div>
+                <form id="vehicleForm" onsubmit="addVehicle(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Placa *</label>
+                        <input id="newPlaca" required maxlength="7" placeholder="Ej: ABC123" class="w-full uppercase bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold focus:ring-2 focus:ring-brand-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">IMEI GPS *</label>
+                        <input id="newImei" required inputmode="numeric" pattern="\d{10,17}" placeholder="15 dígitos" class="w-full font-mono bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-brand-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Fecha de Ingreso *</label>
+                        <input id="newFecha" type="date" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-brand-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Conductor (opcional)</label>
+                        <input id="newConductor" placeholder="Nombre del conductor" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-brand-400 focus:outline-none">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-slate-300 mb-1">Marca / Modelo / Observaciones (opcional)</label>
+                        <input id="newObs" placeholder="Ej: Chevrolet NHR 2024 - 19 pasajeros" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-brand-400 focus:outline-none">
+                    </div>
+                    <button type="submit" class="sm:col-span-2 brand-gradient hover:opacity-90 text-white font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-plus"></i> Registrar Vehículo
+                    </button>
+                </form>
+                <div id="addedVehiclesList" class="mt-4 space-y-2 max-h-40 overflow-y-auto custom-scrollbar"></div>
+            </div>
+
+            <!-- Añadir variable -->
+            <div class="glass-card rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-brand-600 flex items-center justify-center"><i class="fa-solid fa-wand-magic-sparkles text-white text-xs"></i></span>
+                        Añadir Nueva Variable / Indicador
+                    </h3>
+                    <span class="text-[10px] font-bold bg-violet-500/15 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded-full">Misma lógica de cálculo</span>
+                </div>
+                <form onsubmit="addVariable(event)" class="flex flex-col sm:flex-row gap-2 text-xs">
+                    <input id="newVarName" required maxlength="40" placeholder="Escribe lo que buscas medir... Ej: Frenadas bruscas" class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:ring-2 focus:ring-brand-400 focus:outline-none">
+                    <button type="submit" class="bg-gradient-to-br from-violet-500 to-brand-600 hover:opacity-90 text-white font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-plus"></i> Añadir
+                    </button>
+                </form>
+                <p class="text-[11px] text-slate-400 mt-2 leading-relaxed">
+                    <i class="fa-solid fa-lightbulb text-amber-300"></i> Solo escribe el nombre. El sistema la calcula automáticamente por vehículo según kilometraje, días operativos, Pico y Placa y fecha actual; aparecerá en KPIs, tabla y reporte Excel.
+                </p>
+                <div class="flex flex-wrap gap-1.5 mt-3 text-[11px]">
+                    <span class="text-slate-500">Sugerencias:</span>
+                    <button type="button" onclick="quickVar('Frenadas bruscas')" class="bg-slate-800 hover:bg-violet-500/20 text-slate-300 px-2 py-0.5 rounded-lg border border-slate-700 transition">Frenadas bruscas</button>
+                    <button type="button" onclick="quickVar('Aceleraciones bruscas')" class="bg-slate-800 hover:bg-violet-500/20 text-slate-300 px-2 py-0.5 rounded-lg border border-slate-700 transition">Aceleraciones bruscas</button>
+                    <button type="button" onclick="quickVar('Ralentí prolongado')" class="bg-slate-800 hover:bg-violet-500/20 text-slate-300 px-2 py-0.5 rounded-lg border border-slate-700 transition">Ralentí prolongado</button>
+                    <button type="button" onclick="quickVar('Giros bruscos')" class="bg-slate-800 hover:bg-violet-500/20 text-slate-300 px-2 py-0.5 rounded-lg border border-slate-700 transition">Giros bruscos</button>
+                </div>
+                <div id="customVarsList" class="mt-4 flex flex-wrap gap-2"></div>
             </div>
         </section>
 
@@ -202,7 +336,7 @@
             <div class="p-5 bg-slate-800/80 border-b border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h3 class="font-bold text-white text-base flex items-center gap-2">
-                        <i class="fa-solid fa-list-check text-brand-400"></i> Detalle Operacional Individual (52 Vehículos con GPS)
+                        <i class="fa-solid fa-list-check text-brand-400"></i> Detalle Operacional Individual (<span class="fleet-count">52</span> Vehículos con GPS)
                     </h3>
                     <p class="text-xs text-slate-400 mt-0.5">Valores calculados dinámicamente según calendario mensual y restricciones de Pico y Placa</p>
                 </div>
@@ -217,7 +351,7 @@
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left text-xs border-collapse" id="fleetTable">
                     <thead>
-                        <tr class="bg-slate-900/90 text-brand-300 font-bold uppercase tracking-wider border-b border-slate-700">
+                        <tr id="tableHeadRow" class="bg-slate-900/90 text-brand-300 font-bold uppercase tracking-wider border-b border-slate-700">
                             <th class="py-3 px-3">#</th>
                             <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="sortTable(1)">Placa <i class="fa-solid fa-sort text-[10px]"></i></th>
                             <th class="py-3 px-3 font-mono">IMEI GPS</th>
@@ -239,7 +373,7 @@
             </div>
 
             <div class="p-4 bg-slate-900/60 border-t border-slate-800 text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2">
-                <span>Mostrando 52 vehículos monitoreados activamente por GPS.</span>
+                <span>Mostrando <span class="fleet-count">52</span> vehículos monitoreados activamente por GPS.</span>
                 <span class="font-bold text-brand-300" id="tableSummaryText"></span>
             </div>
         </section>
@@ -258,10 +392,50 @@
     <!-- Footer -->
     <footer class="bg-slate-950 border-t border-slate-800 py-6 mt-12 text-slate-400 text-xs text-center">
         <div class="max-w-7xl mx-auto px-4 space-y-1">
-            <p class="font-semibold text-slate-200">Sistema de Control Operacional e Indicadores de Seguridad Vial</p>
-            <p>Especialmente diseñado para Flota de Servicio Especial (Placa Blanca) | 52 Unidades de GPS Activas</p>
+            <p class="font-semibold text-slate-200">Sistema de Control Operacional e Indicadores de Seguridad Vial · White Car GPS</p>
+            <p>Especialmente diseñado para Flota de Servicio Especial (Placa Blanca) | <span class="fleet-count">52</span> Unidades de GPS Activas</p>
         </div>
     </footer>
+
+    <!-- ===== ALERTA DE INSTALACIÓN (BLANCA) ===== -->
+    <div id="installModal" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center p-4 modal-backdrop">
+        <div class="pop-in w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden text-slate-800">
+            <div class="relative px-6 pt-8 pb-5 text-center">
+                <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-brand-100 to-white"></div>
+                <button onclick="closeInstallModal()" aria-label="Cerrar" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition flex items-center justify-center z-10">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="relative mx-auto w-24 h-24 rounded-3xl bg-white shadow-xl ring-4 ring-brand-100 flex items-center justify-center float-logo">
+                    <img src="https://i.imgur.com/ovIjZz9.png" alt="White Car GPS" class="w-20 h-20 object-contain rounded-2xl" referrerpolicy="no-referrer">
+                </div>
+                <h3 class="relative mt-4 text-xl font-extrabold tracking-tight text-slate-900">Instala White Car GPS</h3>
+                <p class="relative mt-1.5 text-sm text-slate-500 leading-relaxed">Accede a tus indicadores de operación y seguridad vial al instante, desde tu pantalla de inicio y a pantalla completa.</p>
+                <div class="relative mt-4 flex justify-center gap-4 text-[11px] text-slate-500 font-semibold">
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-brand-500"></i> Rápida</span>
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-wifi text-brand-500"></i> Offline</span>
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-shield-halved text-brand-500"></i> Segura</span>
+                </div>
+            </div>
+
+            <!-- Instrucciones iOS -->
+            <div id="iosInstructions" class="hidden mx-6 mb-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-[13px] text-slate-600 space-y-2.5">
+                <p class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-brands fa-apple text-lg"></i> <span id="instrTitle">Instalar en iPhone / iPad</span></p>
+                <div id="instrSteps" class="space-y-2.5"></div>
+            </div>
+
+            <div class="px-6 pb-6 space-y-2.5">
+                <button id="installBtn" onclick="handleInstallClick()" class="w-full brand-gradient hover:opacity-95 text-white font-bold py-3.5 rounded-2xl shadow-lg brand-glow transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-download"></i> Instalar App
+                </button>
+                <button onclick="closeInstallModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-3 rounded-2xl transition text-sm">
+                    Ahora no
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-6 left-1/2 z-[110] px-4 py-3 rounded-2xl shadow-2xl text-sm font-semibold"></div>
 
     <script>
         // ARRAY EXACTO DE LOS 52 VEHÍCULOS CON IMEI SUMINISTRADOS
@@ -320,6 +494,47 @@
             { id: 52, placa: "WNW905", imei: "865468051850363" }
         ];
 
+        // ===== ADICIÓN: Vehículos y variables agregados por el usuario (persistentes) =====
+        const LS_VEH = 'wc_added_vehicles_v1';
+        const LS_VAR = 'wc_custom_vars_v1';
+        let ADDED_VEHICLES = [];
+        let CUSTOM_VARS = [];
+        try { ADDED_VEHICLES = JSON.parse(localStorage.getItem(LS_VEH)) || []; } catch (e) { ADDED_VEHICLES = []; }
+        try { CUSTOM_VARS = JSON.parse(localStorage.getItem(LS_VAR)) || []; } catch (e) { CUSTOM_VARS = []; }
+
+        // Flota completa = 52 originales + agregados
+        function getAllVehicles() {
+            return [...FLEET_52_VEHICLES, ...ADDED_VEHICLES];
+        }
+        // Fecha local desde 'YYYY-MM-DD'
+        function parseLocalDate(str) {
+            const [y, m, d] = str.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+        // ¿El vehículo ya estaba en el sistema en esa fecha?
+        function isVehicleActiveOn(v, dateObj) {
+            if (!v.fechaIngreso) return true;
+            return dateObj >= parseLocalDate(v.fechaIngreso);
+        }
+        function getToday() {
+            const n = new Date();
+            return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+        }
+        function toYMD(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        function toYM(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }
+        function hashString(s) {
+            let h = 2166136261;
+            for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+            return h >>> 0;
+        }
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
         // Variables de estado
         let currentCalculations = {};
         let chartInstance1 = null;
@@ -363,12 +578,65 @@
             return dayOfWeek === pypInfo.dayIndex;
         }
 
+        // ===== ADICIÓN: validar período contra la fecha actual =====
+        function validatePeriod() {
+            const input = document.getElementById('monthInput');
+            const today = getToday();
+            const currentYM = toYM(today);
+            input.max = currentYM;
+            let blocked = null;
+            if (!input.value || input.value > currentYM) {
+                blocked = input.value;
+                input.value = currentYM;
+            }
+            return { today, currentYM, blocked };
+        }
+
+        function renderPeriodStatus(info, c) {
+            const el = document.getElementById('periodStatus');
+            const todayTxt = info.today.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            let html = '';
+            if (info.blocked) {
+                const [by, bm] = info.blocked.split('-').map(Number);
+                const bName = by ? new Date(by, bm - 1, 1).toLocaleString('es-CO', { month: 'long', year: 'numeric' }) : 'seleccionado';
+                html += `
+                <div class="mb-3 p-3.5 rounded-xl border border-rose-500/40 bg-gradient-to-r from-rose-500/15 to-rose-500/5 text-xs text-rose-100 flex items-start gap-3">
+                    <span class="w-8 h-8 shrink-0 rounded-lg bg-rose-500/25 flex items-center justify-center"><i class="fa-solid fa-ban text-rose-300"></i></span>
+                    <div><strong class="text-rose-200">Período no disponible:</strong> ${bName} aún no ha ocurrido. No es posible generar datos de días, meses o años futuros. Se muestra el período vigente con los días transcurridos hasta hoy.</div>
+                </div>`;
+            }
+            if (c.isPartial) {
+                const pct = (c.daysInMonth / c.daysInMonthTotal) * 100;
+                html += `
+                <div class="p-3.5 rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 to-amber-500/5 text-xs text-amber-100">
+                    <div class="flex items-start gap-3">
+                        <span class="w-8 h-8 shrink-0 rounded-lg bg-amber-500/25 flex items-center justify-center"><i class="fa-solid fa-hourglass-half text-amber-300"></i></span>
+                        <div class="flex-1">
+                            <strong class="text-amber-200">Mes en curso — datos parciales:</strong> ${c.monthName} no ha terminado. Indicadores calculados con <strong>${c.daysInMonth} de ${c.daysInMonthTotal} días</strong> (del 1 al ${c.daysInMonth}). Hoy es ${todayTxt}.
+                            <div class="mt-2 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-amber-400 to-brand-400 rounded-full" style="width:${pct.toFixed(1)}%"></div></div>
+                        </div>
+                    </div>
+                </div>`;
+            } else {
+                html += `
+                <div class="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs text-emerald-100 flex items-center gap-3">
+                    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+                    <div><strong class="text-emerald-200">Mes cerrado:</strong> ${c.monthName} completo (${c.daysInMonthTotal} días). Hoy es ${todayTxt}.</div>
+                </div>`;
+            }
+            el.innerHTML = html;
+        }
+
         function recalculateAll() {
+            const periodInfo = validatePeriod();
             const monthVal = document.getElementById('monthInput').value; // YYYY-MM
             const [year, monthStr] = monthVal.split('-').map(Number);
             const monthIndex = monthStr - 1;
 
-            const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+            const daysInMonthTotal = new Date(year, monthIndex + 1, 0).getDate();
+            const isPartial = (monthVal === periodInfo.currentYM);
+            // Solo días que ya transcurrieron (hasta hoy)
+            const daysInMonth = isPartial ? periodInfo.today.getDate() : daysInMonthTotal;
 
             // Fechas del mes
             const monthCalendar = [];
@@ -390,25 +658,39 @@
             const speedRatePer10k = isAugust2026 ? 8.31 : (7.4 + globalRng() * 2.2); // Excesos vel por 10,000 km
             const overtimeRatePct = isAugust2026 ? 0.0161 : (0.012 + globalRng() * 0.009); // % sobre días trabajados
 
-            // Cálculo para cada uno de los 52 vehículos
-            const vehicleCalculations = FLEET_52_VEHICLES.map((v, idx) => {
-                const vehRng = mulberry32(seedVal + (idx + 1) * 17);
+            // Tasas de variables personalizadas (deterministas por nombre y período)
+            const customRates = CUSTOM_VARS.map(cv => {
+                const r = mulberry32(hashString(cv.name.toLowerCase()) ^ seedVal);
+                const base = 2 + mulberry32(hashString(cv.name.toLowerCase()))() * 10; // tasa base por 10.000 km
+                return { id: cv.id, name: cv.name, ratePer10k: base * (0.9 + r() * 0.2) };
+            });
+
+            // Vehículos que ya existían en algún día visible del período
+            const lastVisibleDay = monthCalendar[monthCalendar.length - 1];
+            const fleetInPeriod = getAllVehicles().filter(v => isVehicleActiveOn(v, lastVisibleDay));
+
+            // Cálculo para cada vehículo
+            const vehicleCalculations = fleetInPeriod.map((v, idx) => {
+                const vehRng = mulberry32(seedVal + (v.id) * 17);
                 const lastDigit = getLastNumericDigit(v.placa);
                 const pypInfo = getSpecialServicePypDay(lastDigit);
 
+                // Días del período en que el vehículo estaba en el sistema
+                const activeDates = monthCalendar.filter(d => isVehicleActiveOn(v, d));
+
                 // Contar días de PyP en el mes para esta placa
                 let pypDaysCount = 0;
-                monthCalendar.forEach(d => {
+                activeDates.forEach(d => {
                     if (isRestrictedDate(lastDigit, d)) {
                         pypDaysCount++;
                     }
                 });
 
-                // Días de mantenimiento / imprevisto mecánico en el mes (1 a 2 días aleatorios deterministas)
-                const maintDays = Math.round((0.8 + vehRng() * 1.0) * 10) / 10;
+                // Días de mantenimiento / imprevisto mecánico en el mes (1 a 2 días aleatorios deterministas), proporcional a días visibles
+                const maintDays = Math.round((0.8 + vehRng() * 1.0) * (activeDates.length / daysInMonthTotal) * 10) / 10;
 
                 // Días efectivamente operativos
-                const operatingDays = Math.max(0, daysInMonth - pypDaysCount - maintDays);
+                const operatingDays = Math.max(0, activeDates.length - pypDaysCount - maintDays);
 
                 // Variación individual de kilometraje para cada vehículo (+/- 12%)
                 const vehKmFactor = 0.88 + vehRng() * 0.24;
@@ -417,10 +699,19 @@
                 const speedingEvents = (km / 10000) * speedRatePer10k * (0.85 + vehRng() * 0.3);
                 const overtimeEvents = operatingDays * overtimeRatePct * (0.8 + vehRng() * 0.4);
 
+                // Variables personalizadas bajo la misma lógica (proporcionales al kilometraje)
+                const custom = {};
+                customRates.forEach(cr => {
+                    const cvRng = mulberry32(seedVal + v.id * 31 + hashString(cr.name));
+                    custom[cr.id] = (km / 10000) * cr.ratePer10k * (0.85 + cvRng() * 0.3);
+                });
+
                 return {
                     id: v.id,
                     placa: v.placa,
                     imei: v.imei,
+                    isNew: !!v.fechaIngreso,
+                    fechaIngreso: v.fechaIngreso || '',
                     lastDigit: lastDigit,
                     pypAssigned: pypInfo.dayName,
                     pypDays: pypDaysCount,
@@ -429,19 +720,26 @@
                     km: km,
                     trips: trips,
                     speedingEvents: speedingEvents,
-                    overtimeEvents: overtimeEvents
+                    overtimeEvents: overtimeEvents,
+                    custom: custom
                 };
             });
 
-            // Totales de la Flota (52 vehículos)
+            const fleetSize = vehicleCalculations.length;
+
+            // Totales de la Flota
             const totalDriverDays = vehicleCalculations.reduce((a, b) => a + b.operatingDays, 0);
             const totalKm = vehicleCalculations.reduce((a, b) => a + b.km, 0);
             const totalTrips = vehicleCalculations.reduce((a, b) => a + b.trips, 0);
             const totalSpeedingEvents = vehicleCalculations.reduce((a, b) => a + b.speedingEvents, 0);
             const totalOvertimeEvents = vehicleCalculations.reduce((a, b) => a + b.overtimeEvents, 0);
+            const customTotals = customRates.map(cr => ({
+                ...cr,
+                total: vehicleCalculations.reduce((a, b) => a + (b.custom[cr.id] || 0), 0)
+            }));
 
             const activeVehiclesAvgPerDay = totalDriverDays / daysInMonth;
-            const fleetAvailabilityPercent = (activeVehiclesAvgPerDay / 52) * 100;
+            const fleetAvailabilityPercent = fleetSize ? (activeVehiclesAvgPerDay / fleetSize) * 100 : 0;
 
             const monthName = new Date(year, monthIndex, 1).toLocaleString('es-CO', { month: 'long', year: 'numeric' });
 
@@ -451,6 +749,9 @@
                 monthIndex,
                 monthName: monthName.charAt(0).toUpperCase() + monthName.slice(1),
                 daysInMonth,
+                daysInMonthTotal,
+                isPartial,
+                fleetSize,
                 monthCalendar,
                 vehicleCalculations,
                 totalDriverDays,
@@ -458,17 +759,25 @@
                 totalTrips,
                 totalSpeedingEvents,
                 totalOvertimeEvents,
+                customTotals,
                 activeVehiclesAvgPerDay,
                 fleetAvailabilityPercent,
                 speedRatePer10k,
                 demandFactor
             };
 
+            // Actualizar conteo de flota visible
+            document.getElementById('fleetSizeInput').value = fleetSize;
+            document.querySelectorAll('.fleet-count').forEach(el => el.textContent = fleetSize);
+            document.getElementById('chart1Subtitle').textContent = isPartial ? `Días 1–${daysInMonth} (parcial)` : 'Días del mes';
+
             // Actualizar interfaz
+            renderPeriodStatus(periodInfo, currentCalculations);
             renderKPICards();
             renderTable();
             renderCharts();
             renderCalendarSummary();
+            renderManagementLists();
         }
 
         function renderKPICards() {
@@ -482,7 +791,7 @@
                     sub: `Promedio: ${Math.round(c.totalKm / c.daysInMonth).toLocaleString('es-CO')} km/día`,
                     icon: 'fa-gauge-high',
                     color: 'from-brand-400 to-brand-600',
-                    badge: 'Flota 52'
+                    badge: `Flota ${c.fleetSize}`
                 },
                 {
                     title: 'Desplazamientos',
@@ -519,18 +828,30 @@
                 {
                     title: 'Días Trabajados',
                     value: `${Math.round(c.totalDriverDays).toLocaleString('es-CO')} días`,
-                    sub: `${c.daysInMonth} días en ${c.monthName}`,
+                    sub: c.isPartial ? `${c.daysInMonth} de ${c.daysInMonthTotal} días en ${c.monthName}` : `${c.daysInMonth} días en ${c.monthName}`,
                     icon: 'fa-calendar-check',
                     color: 'from-indigo-500 to-brand-700',
-                    badge: 'Calendario'
+                    badge: c.isPartial ? 'Parcial' : 'Calendario'
                 }
             ];
+
+            // Variables personalizadas
+            c.customTotals.forEach(cv => {
+                kpis.push({
+                    title: cv.name,
+                    value: `${Math.round(cv.total).toLocaleString('es-CO')} eventos`,
+                    sub: `Tasa: ${cv.ratePer10k.toFixed(2)} por 10.000 km`,
+                    icon: 'fa-wand-magic-sparkles',
+                    color: 'from-violet-500 to-brand-600',
+                    badge: 'Personalizada'
+                });
+            });
 
             container.innerHTML = kpis.map(k => `
                 <div class="glass-card rounded-2xl p-5 shadow-lg border border-slate-700/60 flex flex-col justify-between hover:border-brand-400/50 transition duration-200">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">${k.title}</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">${escapeHtml(k.title)}</span>
                             <div class="text-2xl font-black text-white mt-1 tracking-tight">${k.value}</div>
                         </div>
                         <div class="bg-gradient-to-br ${k.color} text-white p-3 rounded-xl shadow-md">
@@ -549,11 +870,21 @@
             const tbody = document.getElementById('tableBody');
             const data = currentCalculations.vehicleCalculations;
 
+            // Encabezados de variables personalizadas
+            const headRow = document.getElementById('tableHeadRow');
+            headRow.querySelectorAll('.custom-th').forEach(th => th.remove());
+            currentCalculations.customTotals.forEach(cv => {
+                const th = document.createElement('th');
+                th.className = 'custom-th py-3 px-3 text-center text-violet-300';
+                th.textContent = cv.name;
+                headRow.appendChild(th);
+            });
+
             tbody.innerHTML = data.map(v => `
                 <tr class="hover:bg-slate-800/60 transition">
                     <td class="py-2.5 px-3 text-slate-400 font-mono">${v.id}</td>
-                    <td class="py-2.5 px-3 font-bold text-white">${v.placa}</td>
-                    <td class="py-2.5 px-3 font-mono text-slate-400">${v.imei}</td>
+                    <td class="py-2.5 px-3 font-bold text-white">${escapeHtml(v.placa)}${v.isNew ? ` <span class="ml-1 text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded-full" title="Ingreso: ${v.fechaIngreso}">NUEVO</span>` : ''}</td>
+                    <td class="py-2.5 px-3 font-mono text-slate-400">${escapeHtml(v.imei)}</td>
                     <td class="py-2.5 px-3 text-center">
                         <span class="bg-brand-400/20 text-brand-300 font-bold px-2 py-0.5 rounded-full border border-brand-400/30">
                             ${v.lastDigit}
@@ -567,11 +898,12 @@
                     <td class="py-2.5 px-3 text-right font-mono text-slate-300">${Math.round(v.trips).toLocaleString('es-CO')}</td>
                     <td class="py-2.5 px-3 text-center font-mono text-amber-400">${v.speedingEvents.toFixed(1)}</td>
                     <td class="py-2.5 px-3 text-center font-mono text-rose-400">${v.overtimeEvents.toFixed(1)}</td>
+                    ${currentCalculations.customTotals.map(cv => `<td class="py-2.5 px-3 text-center font-mono text-violet-300">${(v.custom[cv.id] || 0).toFixed(1)}</td>`).join('')}
                 </tr>
             `).join('');
 
             document.getElementById('tableSummaryText').innerText = 
-                `Total Kilómetros Flota (52 veh): ${Math.round(currentCalculations.totalKm).toLocaleString('es-CO')} km`;
+                `Total Kilómetros Flota (${currentCalculations.fleetSize} veh): ${Math.round(currentCalculations.totalKm).toLocaleString('es-CO')} km`;
         }
 
         // Filtrar tabla por término de búsqueda
@@ -606,17 +938,20 @@
             rows.forEach(row => tbody.appendChild(row));
         }
 
+        // Conteos diarios considerando fecha de ingreso de cada vehículo
+        function getDailyCounts(d) {
+            const fleet = getAllVehicles().filter(v => isVehicleActiveOn(v, d));
+            const restricted = fleet.filter(v => isRestrictedDate(getLastNumericDigit(v.placa), d)).length;
+            return { fleet: fleet.length, restricted, available: fleet.length - restricted };
+        }
+
         function renderCharts() {
             const c = currentCalculations;
 
             // Chart 1: Disponibilidad por Día del Mes
             const daysLabels = c.monthCalendar.map(d => `${d.getDate()}/${d.getMonth()+1}`);
-            const dailyActiveCount = c.monthCalendar.map(d => {
-                const restrictedVehicles = FLEET_52_VEHICLES.filter(v => 
-                    isRestrictedDate(getLastNumericDigit(v.placa), d)
-                ).length;
-                return 52 - restrictedVehicles;
-            });
+            const dailyActiveCount = c.monthCalendar.map(d => getDailyCounts(d).available);
+            const maxFleet = Math.max(c.fleetSize, ...dailyActiveCount);
 
             if (chartInstance1) chartInstance1.destroy();
             const ctx1 = document.getElementById('chartDisponibilidad').getContext('2d');
@@ -636,7 +971,7 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { min: 35, max: 52, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { min: Math.max(0, Math.floor(maxFleet * 0.67)), max: maxFleet, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
                         x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } }
                     }
                 }
@@ -689,16 +1024,15 @@
 
         function renderCalendarSummary() {
             const grid = document.getElementById('calendarSummaryGrid');
-            const cal = currentCalculations.monthCalendar;
+            const c = currentCalculations;
+            const cal = c.monthCalendar;
 
-            grid.innerHTML = cal.map(d => {
+            let html = cal.map(d => {
                 const dayNum = d.getDate();
                 const dayName = d.toLocaleDateString('es-CO', { weekday: 'short' });
                 const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
 
-                const restrictedCount = FLEET_52_VEHICLES.filter(v => 
-                    isRestrictedDate(getLastNumericDigit(v.placa), d)
-                ).length;
+                const restrictedCount = getDailyCounts(d).restricted;
 
                 return `
                     <div class="p-2 rounded-xl border ${isWeekend ? 'bg-slate-900/40 border-slate-800 text-slate-500' : (restrictedCount > 0 ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : 'bg-brand-400/10 border-brand-400/20 text-brand-300')}">
@@ -709,6 +1043,17 @@
                     </div>
                 `;
             }).join('');
+
+            // Días futuros del mes en curso (bloqueados)
+            for (let dn = c.daysInMonth + 1; dn <= c.daysInMonthTotal; dn++) {
+                const d = new Date(c.year, c.monthIndex, dn);
+                html += `
+                    <div class="p-2 rounded-xl border border-dashed border-slate-700 bg-slate-900/20 text-slate-600">
+                        <div class="font-bold text-[11px] uppercase">${d.toLocaleDateString('es-CO', { weekday: 'short' })} ${dn}</div>
+                        <div class="text-[10px] mt-1 font-medium"><i class="fa-solid fa-lock text-[9px]"></i> Pendiente</div>
+                    </div>`;
+            }
+            grid.innerHTML = html;
         }
 
         // Cambiar rápidamente de mes
@@ -717,19 +1062,112 @@
             recalculateAll();
         }
 
+        // ===== ADICIÓN: Gestión de vehículos =====
+        function addVehicle(e) {
+            e.preventDefault();
+            const placa = document.getElementById('newPlaca').value.trim().toUpperCase().replace(/\s|-/g, '');
+            const imei = document.getElementById('newImei').value.trim();
+            const fecha = document.getElementById('newFecha').value;
+            const conductor = document.getElementById('newConductor').value.trim();
+            const obs = document.getElementById('newObs').value.trim();
+            const todayYMD = toYMD(getToday());
+
+            if (!/^[A-Z0-9]{5,7}$/.test(placa)) return showToast('Placa inválida (5 a 7 caracteres alfanuméricos).', 'error');
+            if (!/\d/.test(placa)) return showToast('La placa debe contener al menos un número.', 'error');
+            if (!/^\d{10,17}$/.test(imei)) return showToast('IMEI inválido (10 a 17 dígitos).', 'error');
+            if (!fecha) return showToast('Selecciona la fecha de ingreso.', 'error');
+            if (fecha > todayYMD) return showToast('La fecha de ingreso no puede ser futura.', 'error');
+            const all = getAllVehicles();
+            if (all.some(v => v.placa === placa)) return showToast(`La placa ${placa} ya existe en la flota.`, 'error');
+            if (all.some(v => v.imei === imei)) return showToast('Ese IMEI ya está asignado a otro vehículo.', 'error');
+
+            const nextId = Math.max(...all.map(v => v.id)) + 1;
+            ADDED_VEHICLES.push({ id: nextId, placa, imei, fechaIngreso: fecha, conductor, obs });
+            localStorage.setItem(LS_VEH, JSON.stringify(ADDED_VEHICLES));
+            document.getElementById('vehicleForm').reset();
+            document.getElementById('newFecha').value = todayYMD;
+            recalculateAll();
+            showToast(`Vehículo ${placa} registrado desde ${fecha}.`, 'success');
+        }
+
+        function removeVehicle(id) {
+            const v = ADDED_VEHICLES.find(x => x.id === id);
+            if (!v || !confirm(`¿Eliminar el vehículo ${v.placa} de la flota?`)) return;
+            ADDED_VEHICLES = ADDED_VEHICLES.filter(x => x.id !== id);
+            localStorage.setItem(LS_VEH, JSON.stringify(ADDED_VEHICLES));
+            recalculateAll();
+            showToast(`Vehículo ${v.placa} eliminado.`, 'success');
+        }
+
+        // ===== ADICIÓN: Gestión de variables =====
+        function quickVar(name) {
+            document.getElementById('newVarName').value = name;
+            document.getElementById('newVarName').focus();
+        }
+        function addVariable(e) {
+            e.preventDefault();
+            const input = document.getElementById('newVarName');
+            const name = input.value.trim().replace(/\s+/g, ' ');
+            if (!name) return;
+            if (CUSTOM_VARS.some(v => v.name.toLowerCase() === name.toLowerCase())) return showToast('Esa variable ya existe.', 'error');
+            CUSTOM_VARS.push({ id: 'cv_' + Date.now(), name: name.charAt(0).toUpperCase() + name.slice(1) });
+            localStorage.setItem(LS_VAR, JSON.stringify(CUSTOM_VARS));
+            input.value = '';
+            recalculateAll();
+            showToast(`Variable "${name}" añadida.`, 'success');
+        }
+        function removeVariable(id) {
+            const v = CUSTOM_VARS.find(x => x.id === id);
+            if (!v || !confirm(`¿Eliminar la variable "${v.name}"?`)) return;
+            CUSTOM_VARS = CUSTOM_VARS.filter(x => x.id !== id);
+            localStorage.setItem(LS_VAR, JSON.stringify(CUSTOM_VARS));
+            recalculateAll();
+        }
+
+        function renderManagementLists() {
+            const vl = document.getElementById('addedVehiclesList');
+            vl.innerHTML = ADDED_VEHICLES.length ? ADDED_VEHICLES.map(v => `
+                <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-800/70 border border-slate-700 text-xs">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-8 h-8 shrink-0 rounded-lg bg-emerald-500/15 text-emerald-300 flex items-center justify-center"><i class="fa-solid fa-car"></i></span>
+                        <div class="min-w-0">
+                            <div class="font-bold text-white">${escapeHtml(v.placa)} <span class="font-mono font-normal text-slate-400 ml-1">${escapeHtml(v.imei)}</span></div>
+                            <div class="text-[10px] text-slate-400 truncate">Ingreso: ${v.fechaIngreso}${v.conductor ? ' · ' + escapeHtml(v.conductor) : ''}${v.obs ? ' · ' + escapeHtml(v.obs) : ''}</div>
+                        </div>
+                    </div>
+                    <button onclick="removeVehicle(${v.id})" class="w-7 h-7 shrink-0 rounded-lg text-slate-400 hover:text-rose-300 hover:bg-rose-500/15 transition" title="Eliminar"><i class="fa-solid fa-trash-can text-[11px]"></i></button>
+                </div>`).join('') : `<p class="text-[11px] text-slate-500 text-center py-1">Sin vehículos adicionales. Flota base: 52 unidades.</p>`;
+
+            const cl = document.getElementById('customVarsList');
+            cl.innerHTML = CUSTOM_VARS.map(v => `
+                <span class="inline-flex items-center gap-2 pl-3 pr-1 py-1 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-200 text-xs font-semibold">
+                    <i class="fa-solid fa-chart-simple text-[10px]"></i> ${escapeHtml(v.name)}
+                    <button onclick="removeVariable('${v.id}')" class="w-5 h-5 rounded-full hover:bg-violet-500/30 transition" title="Eliminar"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                </span>`).join('');
+        }
+
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            t.className = `toast-in fixed bottom-6 left-1/2 z-[110] px-4 py-3 rounded-2xl shadow-2xl text-sm font-semibold flex items-center gap-2 ${type === 'error' ? 'bg-rose-600 text-white' : 'bg-white text-slate-800'}`;
+            t.style.transform = 'translateX(-50%)';
+            t.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check text-emerald-500'}"></i> ${escapeHtml(msg)}`;
+            clearTimeout(window.__toastT);
+            window.__toastT = setTimeout(() => t.classList.add('hidden'), 3200);
+        }
+
         function exportToExcel() {
             const c = currentCalculations;
             const wb = XLSX.utils.book_new();
 
             // Hoja 1: Resumen Ejecutivo
             const kpiRows = [
-                ["SISTEMA DE CONTROL OPERACIONAL Y SEGURIDAD VIAL"],
-                ["Servicio Especial - Placa Blanca (52 Vehículos)"],
-                [""],
+                ["SISTEMA DE CONTROL OPERACIONAL Y SEGURIDAD VIAL - WHITE CAR GPS"],
+                [`Servicio Especial - Placa Blanca (${c.fleetSize} Vehículos)`],
+                [`Generado: ${new Date().toLocaleString('es-CO')}`],
                 ["INDICADOR OPERATIVO", "VALOR CALCULADO", "UNIDAD / DETALLE"],
-                ["Período Seleccionado", c.monthName, "Mes / Año"],
-                ["Días en el Mes", c.daysInMonth, "Días Calendario"],
-                ["Flota Activa en Plataforma GPS", 52, "Vehículos Monitoreados"],
+                ["Período Seleccionado", c.monthName + (c.isPartial ? " (parcial)" : ""), "Mes / Año"],
+                ["Días en el Mes", c.isPartial ? `${c.daysInMonth} de ${c.daysInMonthTotal}` : c.daysInMonth, c.isPartial ? "Días transcurridos a la fecha" : "Días Calendario"],
+                ["Flota Activa en Plataforma GPS", c.fleetSize, "Vehículos Monitoreados"],
                 ["Promedio Flota Operativa Diaria", parseFloat(c.activeVehiclesAvgPerDay.toFixed(2)), "Vehículos / Día"],
                 ["Porcentaje Disponibilidad Flota", parseFloat(c.fleetAvailabilityPercent.toFixed(2)) + "%", "% Operatividad Real"],
                 ["Total Días Trabajados (Conductores)", Math.round(c.totalDriverDays), "Días - Conductor"],
@@ -737,18 +1175,20 @@
                 ["Total Desplazamientos / Viajes", Math.round(c.totalTrips), "Viajes"],
                 ["Excesos de Velocidad Registrados", Math.round(c.totalSpeedingEvents), "Eventos de Riesgo"],
                 ["Tasa Excesos Vel. por 10.000 Km", parseFloat(c.speedRatePer10k.toFixed(2)), "Eventos / 10k Km"],
-                ["Excesos de Jornada Laboral Registrados", Math.round(c.totalOvertimeEvents), "Eventos (1.6% días)"]
+                ["Excesos de Jornada Laboral Registrados", Math.round(c.totalOvertimeEvents), "Eventos (1.6% días)"],
+                ...c.customTotals.map(cv => [cv.name, Math.round(cv.total), `Eventos (${cv.ratePer10k.toFixed(2)} / 10k Km)`])
             ];
             const ws1 = XLSX.utils.aoa_to_sheet(kpiRows);
 
-            // Hoja 2: Detalle 52 Vehículos
+            // Hoja 2: Detalle Vehículos
             const detailHeaders = [
-                ["#", "Placa", "IMEI GPS", "Último Dígito", "Día Pico y Placa", "Días PyP Mes", "Días Mantenimiento", "Días Operativos", "Km Recorridos", "Desplazamientos", "Excesos Velocidad", "Excesos Jornada"]
+                ["#", "Placa", "IMEI GPS", "Fecha Ingreso", "Último Dígito", "Día Pico y Placa", "Días PyP Mes", "Días Mantenimiento", "Días Operativos", "Km Recorridos", "Desplazamientos", "Excesos Velocidad", "Excesos Jornada", ...c.customTotals.map(cv => cv.name)]
             ];
             const detailRows = c.vehicleCalculations.map(v => [
                 v.id,
                 v.placa,
                 v.imei,
+                v.fechaIngreso || "Flota base",
                 v.lastDigit,
                 v.pypAssigned,
                 v.pypDays,
@@ -757,36 +1197,118 @@
                 Math.round(v.km),
                 Math.round(v.trips),
                 parseFloat(v.speedingEvents.toFixed(1)),
-                parseFloat(v.overtimeEvents.toFixed(1))
+                parseFloat(v.overtimeEvents.toFixed(1)),
+                ...c.customTotals.map(cv => parseFloat((v.custom[cv.id] || 0).toFixed(1)))
             ]);
             const ws2 = XLSX.utils.aoa_to_sheet([...detailHeaders, ...detailRows]);
 
             // Hoja 3: Calendario Diario
-            const calHeaders = [["Fecha", "Día de la Semana", "Restricción Servicio Especial", "Vehículos Restringidos (PyP)"]];
+            const calHeaders = [["Fecha", "Día de la Semana", "Restricción Servicio Especial", "Vehículos Restringidos (PyP)", "Flota en Sistema"]];
             const calRows = c.monthCalendar.map(d => {
-                const count = FLEET_52_VEHICLES.filter(v => isRestrictedDate(getLastNumericDigit(v.placa), d)).length;
+                const counts = getDailyCounts(d);
                 return [
-                    d.toISOString().split('T')[0],
+                    toYMD(d),
                     d.toLocaleDateString('es-CO', { weekday: 'long' }),
                     (d.getDay() === 0 || d.getDay() === 6) ? "Fin de Semana (Sin PyP)" : "Día Hábil (1/5 Flota en PyP)",
-                    count
+                    counts.restricted,
+                    counts.fleet
                 ];
             });
             const ws3 = XLSX.utils.aoa_to_sheet([...calHeaders, ...calRows]);
 
             // Agregar Hojas
             XLSX.utils.book_append_sheet(wb, ws1, "Resumen Ejecutivo");
-            XLSX.utils.book_append_sheet(wb, ws2, "Detalle 52 Vehiculos");
+            XLSX.utils.book_append_sheet(wb, ws2, `Detalle ${c.fleetSize} Vehiculos`);
             XLSX.utils.book_append_sheet(wb, ws3, "Calendario Mensual");
 
             // Nombre del archivo
-            const fileName = `Reporte_Seguridad_Vial_ServicioEspecial_${c.year}_${c.monthStr}_52Veh.xlsx`;
+            const fileName = `Reporte_WhiteCarGPS_ServicioEspecial_${c.year}_${c.monthStr}${c.isPartial ? '_parcial' : ''}_${c.fleetSize}Veh.xlsx`;
             XLSX.writeFile(wb, fileName);
+        }
+
+        // ===== ADICIÓN: PWA - Service Worker + Alerta de instalación =====
+        let deferredPrompt = null;
+        const ua = navigator.userAgent || '';
+        const isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isAndroid = /android/i.test(ua);
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW no registrado:', err));
+            });
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            closeInstallModal();
+            showToast('¡White Car GPS instalada correctamente!', 'success');
+        });
+
+        function openInstallModal() {
+            if (isStandalone) return; // Ya se está ejecutando como app instalada
+            const m = document.getElementById('installModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+        function closeInstallModal() {
+            const m = document.getElementById('installModal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+            document.getElementById('iosInstructions').classList.add('hidden');
+        }
+
+        function stepHtml(n, html) {
+            return `<div class="flex items-start gap-2.5"><span class="w-6 h-6 shrink-0 rounded-full brand-gradient text-white text-[11px] font-bold flex items-center justify-center">${n}</span><span class="pt-0.5">${html}</span></div>`;
+        }
+
+        function showInstructions(type) {
+            const box = document.getElementById('iosInstructions');
+            const title = document.getElementById('instrTitle');
+            const steps = document.getElementById('instrSteps');
+            if (type === 'ios') {
+                box.querySelector('i').className = 'fa-brands fa-apple text-lg';
+                title.textContent = 'Instalar en iPhone / iPad';
+                steps.innerHTML =
+                    stepHtml(1, 'Abre esta página en <strong>Safari</strong>.') +
+                    stepHtml(2, 'Toca el botón <strong>Compartir</strong> <i class="fa-solid fa-arrow-up-from-bracket text-brand-600"></i> en la barra inferior (o superior en iPad).') +
+                    stepHtml(3, 'Desliza y elige <strong>"Agregar a pantalla de inicio"</strong> <i class="fa-regular fa-square-plus text-brand-600"></i>.') +
+                    stepHtml(4, 'Activa <strong>"Abrir como app web"</strong> si aparece y toca <strong>Agregar</strong>.');
+            } else {
+                box.querySelector('i').className = 'fa-brands fa-android text-lg text-emerald-600';
+                title.textContent = isAndroid ? 'Instalar en Android' : 'Instalar en tu dispositivo';
+                steps.innerHTML =
+                    stepHtml(1, 'Abre esta página en <strong>Google Chrome</strong>.') +
+                    stepHtml(2, 'Toca el menú <strong><i class="fa-solid fa-ellipsis-vertical"></i></strong> (arriba a la derecha).') +
+                    stepHtml(3, 'Selecciona <strong>"Instalar app"</strong> o <strong>"Agregar a pantalla principal"</strong>.');
+            }
+            box.classList.remove('hidden');
+        }
+
+        async function handleInstallClick() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const choice = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                if (choice.outcome === 'accepted') closeInstallModal();
+                return;
+            }
+            showInstructions(isIOS ? 'ios' : 'other');
         }
 
         // Inicializar al cargar la página
         window.addEventListener('DOMContentLoaded', () => {
+            const today = getToday();
+            document.getElementById('todayLabel').textContent = today.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+            document.getElementById('newFecha').max = toYMD(today);
+            document.getElementById('newFecha').value = toYMD(today);
             recalculateAll();
+            setTimeout(openInstallModal, 900); // La alerta aparece cada vez que se abre la app
         });
     </script>
 </body>
