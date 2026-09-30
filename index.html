@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Operación y Seguridad Vial - Flota 52 Servicio Especial</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS (XLSX) CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9fa',
+                            100: '#e0f4f5',
+                            200: '#c2e9eb',
+                            300: '#94d7dc',
+                            400: '#67B7BE', // COLOR PRINCIPAL REQUERIDO
+                            500: '#4da0a7',
+                            600: '#3e8289',
+                            700: '#356a70',
+                            800: '#1e3a3a',
+                            900: '#0f1d1d',
+                        },
+                        darkcard: '#1E293B',
+                        darkbg: '#0F172A'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0F172A;
+            color: #F8FAFC;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1E293B;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #67B7BE;
+            border-radius: 4px;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(103, 183, 190, 0.2);
+        }
+        .brand-gradient {
+            background: linear-gradient(135deg, #67B7BE 0%, #3e8289 100%);
+        }
+        .brand-glow {
+            box-shadow: 0 0 20px rgba(103, 183, 190, 0.25);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl brand-gradient flex items-center justify-center text-white shadow-lg brand-glow">
+                        <i class="fa-solid fa-bus-simple text-2xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-white">
+                                Indicadores de Operación & Seguridad Vial
+                            </h1>
+                            <span class="bg-brand-400/20 text-brand-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-brand-400/30">
+                                Servicio Especial
+                            </span>
+                        </div>
+                        <p class="text-slate-400 text-xs mt-0.5">
+                            Monitoreo de la Flota Activa (52 Vehículos - Placa Blanca) | Pico & Placa 1 día/semana
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="exportToExcel()" class="brand-gradient hover:opacity-90 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg transition flex items-center gap-2 text-sm border border-brand-300/30">
+                        <i class="fa-solid fa-file-excel text-emerald-300 text-lg"></i>
+                        Descargar Reporte Excel (.xlsx)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Selector de Período y Control de Parámetros -->
+        <section class="glass-card rounded-2xl p-5 shadow-2xl">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-700/60">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-brand-400 text-lg"></i>
+                    <h2 class="text-base font-bold text-white">Parámetros del Período de Operación</h2>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="text-slate-400">Acceso Rápido:</span>
+                    <button onclick="setQuickMonth('2026-08')" class="bg-slate-800 hover:bg-brand-400/20 hover:text-brand-300 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700 transition">Agosto 2026</button>
+                    <button onclick="setQuickMonth('2026-09')" class="bg-slate-800 hover:bg-brand-400/20 hover:text-brand-300 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700 transition">Septiembre 2026</button>
+                    <button onclick="setQuickMonth('2026-10')" class="bg-slate-800 hover:bg-brand-400/20 hover:text-brand-300 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700 transition">Octubre 2026</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                <!-- Selector de Año y Mes -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                        <i class="fa-regular fa-calendar-check text-brand-400 mr-1"></i> Año / Mes a Simular
+                    </label>
+                    <input type="month" id="monthInput" value="2026-08" onchange="recalculateAll()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white font-medium focus:ring-2 focus:ring-brand-400 focus:outline-none text-sm">
+                </div>
+
+                <!-- Número Fijo de la Flota -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                        <i class="fa-solid fa-car-side text-brand-400 mr-1"></i> Flota Operativa en Plataforma
+                    </label>
+                    <div class="relative">
+                        <input type="number" id="fleetSizeInput" value="52" readonly class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3.5 py-2 text-brand-300 font-bold text-sm cursor-not-allowed">
+                        <span class="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold">100% GPS</span>
+                    </div>
+                </div>
+
+                <!-- Esquema de Regla de Pico y Placa Servicio Especial -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                        <i class="fa-solid fa-shield-halved text-brand-400 mr-1"></i> Regla Pico y Placa
+                    </label>
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-200 font-medium flex items-center justify-between">
+                        <span>Placa Blanca (1 día/sem)</span>
+                        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                    </div>
+                </div>
+
+                <!-- Botón Recalcular -->
+                <div class="flex items-end">
+                    <button onclick="recalculateAll()" class="w-full brand-gradient hover:opacity-90 text-white font-bold py-2 px-4 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-rotate text-sm"></i> Recalcular Indicadores
+                    </button>
+                </div>
+            </div>
+
+            <!-- Regla Explicativa -->
+            <div class="mt-4 p-3 bg-slate-800/60 rounded-xl border border-slate-700/50 text-xs text-slate-300 flex items-start gap-2.5">
+                <i class="fa-solid fa-circle-info text-brand-400 text-sm mt-0.5"></i>
+                <div>
+                    <strong class="text-brand-300 font-semibold">Normativa de Pico y Placa Servicio Especial:</strong> Cada vehículo tiene restricción un único día a la semana (Lunes a Viernes) según el último dígito numérico de la placa: <strong>1-2 (Lun), 3-4 (Mar), 5-6 (Mié), 7-8 (Jue), 9-0 (Vie)</strong>. Sábados y Domingos se encuentran habilitados.
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="kpiCardsContainer">
+            <!-- Tarjetas KPI generadas dinámicamente -->
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass-card rounded-2xl p-5 shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-brand-400"></i> Disponibilidad Diaria de Flota en el Mes
+                    </h3>
+                    <span class="text-xs text-slate-400" id="chart1Subtitle">Días del mes</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="chartDisponibilidad"></canvas>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5 shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-brand-400"></i> Top 12 Vehículos: Kilometraje vs Excesos Velocidad
+                    </h3>
+                    <span class="text-xs text-slate-400">Seguridad Vial</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="chartRiesgo"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="glass-card rounded-2xl shadow-xl overflow-hidden border border-slate-700/60">
+            <div class="p-5 bg-slate-800/80 border-b border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h3 class="font-bold text-white text-base flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-brand-400"></i> Detalle Operacional Individual (52 Vehículos con GPS)
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Valores calculados dinámicamente según calendario mensual y restricciones de Pico y Placa</p>
+                </div>
+
+                <div class="w-full md:w-72 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Buscar placa o IMEI..." class="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-8 pr-4 py-1.5 text-xs text-white focus:ring-2 focus:ring-brand-400 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Tabla principal de vehículos -->
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs border-collapse" id="fleetTable">
+                    <thead>
+                        <tr class="bg-slate-900/90 text-brand-300 font-bold uppercase tracking-wider border-b border-slate-700">
+                            <th class="py-3 px-3">#</th>
+                            <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="sortTable(1)">Placa <i class="fa-solid fa-sort text-[10px]"></i></th>
+                            <th class="py-3 px-3 font-mono">IMEI GPS</th>
+                            <th class="py-3 px-3 text-center">Último Dígito</th>
+                            <th class="py-3 px-3">Restricción PyP</th>
+                            <th class="py-3 px-3 text-center">Días PyP</th>
+                            <th class="py-3 px-3 text-center">Días Manten.</th>
+                            <th class="py-3 px-3 text-center">Días Operativos</th>
+                            <th class="py-3 px-3 text-right cursor-pointer hover:text-white" onclick="sortTable(8)">Km Recorridos <i class="fa-solid fa-sort text-[10px]"></i></th>
+                            <th class="py-3 px-3 text-right">Desplazamientos</th>
+                            <th class="py-3 px-3 text-center cursor-pointer hover:text-white" onclick="sortTable(10)">Excesos Vel. <i class="fa-solid fa-sort text-[10px]"></i></th>
+                            <th class="py-3 px-3 text-center">Excesos Jornada</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 text-slate-200 font-medium" id="tableBody">
+                        <!-- Filas insertadas dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-4 bg-slate-900/60 border-t border-slate-800 text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2">
+                <span>Mostrando 52 vehículos monitoreados activamente por GPS.</span>
+                <span class="font-bold text-brand-300" id="tableSummaryText"></span>
+            </div>
+        </section>
+
+        <section class="glass-card rounded-2xl p-5 shadow-xl">
+            <h3 class="font-bold text-white text-sm mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-calendar-days text-brand-400"></i> Calendario de Restricciones del Mes Seleccionado
+            </h3>
+            <div id="calendarSummaryGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 text-center text-xs">
+                <!-- Se llena con el calendario dinámico -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-6 mt-12 text-slate-400 text-xs text-center">
+        <div class="max-w-7xl mx-auto px-4 space-y-1">
+            <p class="font-semibold text-slate-200">Sistema de Control Operacional e Indicadores de Seguridad Vial</p>
+            <p>Especialmente diseñado para Flota de Servicio Especial (Placa Blanca) | 52 Unidades de GPS Activas</p>
+        </div>
+    </footer>
+
+    <script>
+        // ARRAY EXACTO DE LOS 52 VEHÍCULOS CON IMEI SUMINISTRADOS
+        const FLEET_52_VEHICLES = [
+            { id: 1, placa: "DQN319", imei: "868022038466947" },
+            { id: 2, placa: "ESV102", imei: "866557084593054" },
+            { id: 3, placa: "FVL193", imei: "866557083075327" },
+            { id: 4, placa: "GIL918", imei: "863829076352853" },
+            { id: 5, placa: "GRK038", imei: "865209076853465" },
+            { id: 6, placa: "GRK191", imei: "862092068741879" },
+            { id: 7, placa: "GUR046", imei: "866557083072597" },
+            { id: 8, placa: "JKV843", imei: "866557083069742" },
+            { id: 9, placa: "JKX568", imei: "866557080391891" },
+            { id: 10, placa: "JTP969", imei: "865468051859760" },
+            { id: 11, placa: "JTQ005", imei: "863829076400744" },
+            { id: 12, placa: "JTW319", imei: "865468051850843" },
+            { id: 13, placa: "JTX779", imei: "866557083070864" },
+            { id: 14, placa: "JUM526", imei: "866557080264809" },
+            { id: 15, placa: "JUZ028", imei: "863829076346962" },
+            { id: 16, placa: "JXY700", imei: "866557083042897" },
+            { id: 17, placa: "KYP066", imei: "866557080389465" },
+            { id: 18, placa: "KYP647", imei: "869412077788898" },
+            { id: 19, placa: "KYR271", imei: "865468051843632" },
+            { id: 20, placa: "LCN479", imei: "869412074358356" },
+            { id: 21, placa: "LJT975", imei: "863829076156510" },
+            { id: 22, placa: "LKK286", imei: "863874084610868" },
+            { id: 23, placa: "LLL728", imei: "869412072219113" },
+            { id: 24, placa: "LPY669", imei: "866557083071755" },
+            { id: 25, placa: "LUM483", imei: "869412077547401" },
+            { id: 26, placa: "LZO287", imei: "865209076730937" },
+            { id: 27, placa: "NHR336", imei: "866557083040446" },
+            { id: 28, placa: "NHT687", imei: "869412074240992" },
+            { id: 29, placa: "NOW257", imei: "863829075972578" },
+            { id: 30, placa: "NOW626", imei: "863829076090842" },
+            { id: 31, placa: "NUV140", imei: "861768073183337" },
+            { id: 32, placa: "NUX074", imei: "865893081480438" },
+            { id: 33, placa: "PMV378", imei: "863829075997864" },
+            { id: 34, placa: "PMV457", imei: "866557083055915" },
+            { id: 35, placa: "PMX347", imei: "863829075963429" },
+            { id: 36, placa: "PMX396", imei: "865468051858515" },
+            { id: 37, placa: "QSK895", imei: "866557083041881" },
+            { id: 38, placa: "RBZ495", imei: "869412074229532" },
+            { id: 39, placa: "SQW238", imei: "869412077818711" },
+            { id: 40, placa: "TFT768", imei: "869412077608328" },
+            { id: 41, placa: "TFX225", imei: "866557083075715" },
+            { id: 42, placa: "TFX577", imei: "869412077517982" },
+            { id: 43, placa: "THQ682", imei: "869412077546957" },
+            { id: 44, placa: "TSP130", imei: "869412076686234" },
+            { id: 45, placa: "UDN78G", imei: "865468053522929" },
+            { id: 46, placa: "UFX881", imei: "863829076130150" },
+            { id: 47, placa: "UFX970", imei: "865468051843657" },
+            { id: 48, placa: "WCL014", imei: "866557083042715" },
+            { id: 49, placa: "WEW430", imei: "866557083043820" },
+            { id: 50, placa: "WLT885", imei: "865468051845579" },
+            { id: 51, placa: "WNT383", imei: "866557080391503" },
+            { id: 52, placa: "WNW905", imei: "865468051850363" }
+        ];
+
+        // Variables de estado
+        let currentCalculations = {};
+        let chartInstance1 = null;
+        let chartInstance2 = null;
+
+        // Generador PRNG mulberry32 para simulación determinista exacta por mes y año
+        function mulberry32(a) {
+            return function() {
+              var t = a += 0x6D2B79F5;
+              t = Math.imul(t ^ t >>> 15, t | 1);
+              t ^= t + Math.imul(t ^ t >>> 8, t | 61);
+              return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            }
+        }
+
+        // Obtener el último dígito NUMÉRICO de la placa (ej: UDN78G -> 8)
+        function getLastNumericDigit(placa) {
+            const matches = placa.match(/\d/g);
+            if (matches && matches.length > 0) {
+                return parseInt(matches[matches.length - 1], 10);
+            }
+            return 0;
+        }
+
+        // Día asignado de Pico y Placa para Servicio Especial (Placa Blanca)
+        function getSpecialServicePypDay(lastDigit) {
+            if ([1, 2].includes(lastDigit)) return { dayIndex: 1, dayName: "Lunes" };
+            if ([3, 4].includes(lastDigit)) return { dayIndex: 2, dayName: "Martes" };
+            if ([5, 6].includes(lastDigit)) return { dayIndex: 3, dayName: "Miércoles" };
+            if ([7, 8].includes(lastDigit)) return { dayIndex: 4, dayName: "Jueves" };
+            if ([9, 0].includes(lastDigit)) return { dayIndex: 5, dayName: "Viernes" };
+            return { dayIndex: 1, dayName: "Lunes" };
+        }
+
+        // Evaluar si una fecha restringe a una placa según regla Servicio Especial
+        function isRestrictedDate(lastDigit, dateObj) {
+            const dayOfWeek = dateObj.getDay(); // 0: Dom, 1: Lun, ... 6: Sáb
+            if (dayOfWeek === 0 || dayOfWeek === 6) return false; // Sábados y Domingos sin restricción
+
+            const pypInfo = getSpecialServicePypDay(lastDigit);
+            return dayOfWeek === pypInfo.dayIndex;
+        }
+
+        function recalculateAll() {
+            const monthVal = document.getElementById('monthInput').value; // YYYY-MM
+            const [year, monthStr] = monthVal.split('-').map(Number);
+            const monthIndex = monthStr - 1;
+
+            const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+
+            // Fechas del mes
+            const monthCalendar = [];
+            for (let d = 1; d <= daysInMonth; d++) {
+                monthCalendar.push(new Date(year, monthIndex, d));
+            }
+
+            // Semilla determinista basada en el período (Año * 1000 + Mes)
+            const seedVal = year * 1000 + monthStr;
+            const globalRng = mulberry32(seedVal);
+
+            // Factores de variabilidad mensual realista
+            // Si es Agosto 2026, los factores se alinean con los parámetros reales base
+            const isAugust2026 = (year === 2026 && monthStr === 8);
+            
+            const demandFactor = isAugust2026 ? 1.0 : (0.93 + globalRng() * 0.14); // Varía demanda ~93% a 107%
+            const baseKmPerDay = isAugust2026 ? 191.8 : (175 + globalRng() * 32);  // Km/día por vehículo activo
+            const baseTripsPerDay = isAugust2026 ? 5.33 : (4.8 + globalRng() * 1.0); // Viajes/día por vehículo activo
+            const speedRatePer10k = isAugust2026 ? 8.31 : (7.4 + globalRng() * 2.2); // Excesos vel por 10,000 km
+            const overtimeRatePct = isAugust2026 ? 0.0161 : (0.012 + globalRng() * 0.009); // % sobre días trabajados
+
+            // Cálculo para cada uno de los 52 vehículos
+            const vehicleCalculations = FLEET_52_VEHICLES.map((v, idx) => {
+                const vehRng = mulberry32(seedVal + (idx + 1) * 17);
+                const lastDigit = getLastNumericDigit(v.placa);
+                const pypInfo = getSpecialServicePypDay(lastDigit);
+
+                // Contar días de PyP en el mes para esta placa
+                let pypDaysCount = 0;
+                monthCalendar.forEach(d => {
+                    if (isRestrictedDate(lastDigit, d)) {
+                        pypDaysCount++;
+                    }
+                });
+
+                // Días de mantenimiento / imprevisto mecánico en el mes (1 a 2 días aleatorios deterministas)
+                const maintDays = Math.round((0.8 + vehRng() * 1.0) * 10) / 10;
+
+                // Días efectivamente operativos
+                const operatingDays = Math.max(0, daysInMonth - pypDaysCount - maintDays);
+
+                // Variación individual de kilometraje para cada vehículo (+/- 12%)
+                const vehKmFactor = 0.88 + vehRng() * 0.24;
+                const km = operatingDays * baseKmPerDay * vehKmFactor * demandFactor;
+                const trips = operatingDays * baseTripsPerDay * vehKmFactor * demandFactor;
+                const speedingEvents = (km / 10000) * speedRatePer10k * (0.85 + vehRng() * 0.3);
+                const overtimeEvents = operatingDays * overtimeRatePct * (0.8 + vehRng() * 0.4);
+
+                return {
+                    id: v.id,
+                    placa: v.placa,
+                    imei: v.imei,
+                    lastDigit: lastDigit,
+                    pypAssigned: pypInfo.dayName,
+                    pypDays: pypDaysCount,
+                    maintDays: maintDays,
+                    operatingDays: operatingDays,
+                    km: km,
+                    trips: trips,
+                    speedingEvents: speedingEvents,
+                    overtimeEvents: overtimeEvents
+                };
+            });
+
+            // Totales de la Flota (52 vehículos)
+            const totalDriverDays = vehicleCalculations.reduce((a, b) => a + b.operatingDays, 0);
+            const totalKm = vehicleCalculations.reduce((a, b) => a + b.km, 0);
+            const totalTrips = vehicleCalculations.reduce((a, b) => a + b.trips, 0);
+            const totalSpeedingEvents = vehicleCalculations.reduce((a, b) => a + b.speedingEvents, 0);
+            const totalOvertimeEvents = vehicleCalculations.reduce((a, b) => a + b.overtimeEvents, 0);
+
+            const activeVehiclesAvgPerDay = totalDriverDays / daysInMonth;
+            const fleetAvailabilityPercent = (activeVehiclesAvgPerDay / 52) * 100;
+
+            const monthName = new Date(year, monthIndex, 1).toLocaleString('es-CO', { month: 'long', year: 'numeric' });
+
+            currentCalculations = {
+                year,
+                monthStr,
+                monthIndex,
+                monthName: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+                daysInMonth,
+                monthCalendar,
+                vehicleCalculations,
+                totalDriverDays,
+                totalKm,
+                totalTrips,
+                totalSpeedingEvents,
+                totalOvertimeEvents,
+                activeVehiclesAvgPerDay,
+                fleetAvailabilityPercent,
+                speedRatePer10k,
+                demandFactor
+            };
+
+            // Actualizar interfaz
+            renderKPICards();
+            renderTable();
+            renderCharts();
+            renderCalendarSummary();
+        }
+
+        function renderKPICards() {
+            const c = currentCalculations;
+            const container = document.getElementById('kpiCardsContainer');
+
+            const kpis = [
+                {
+                    title: 'Kilometraje Total',
+                    value: `${Math.round(c.totalKm).toLocaleString('es-CO')} km`,
+                    sub: `Promedio: ${Math.round(c.totalKm / c.daysInMonth).toLocaleString('es-CO')} km/día`,
+                    icon: 'fa-gauge-high',
+                    color: 'from-brand-400 to-brand-600',
+                    badge: 'Flota 52'
+                },
+                {
+                    title: 'Desplazamientos',
+                    value: `${Math.round(c.totalTrips).toLocaleString('es-CO')} viajes`,
+                    sub: `Promedio: ${(c.totalKm / c.totalTrips).toFixed(1)} km / viaje`,
+                    icon: 'fa-route',
+                    color: 'from-teal-500 to-teal-700',
+                    badge: 'Operación'
+                },
+                {
+                    title: 'Excesos de Velocidad',
+                    value: `${Math.round(c.totalSpeedingEvents)} eventos`,
+                    sub: `Tasa: ${c.speedRatePer10k.toFixed(2)} por 10.000 km`,
+                    icon: 'fa-bolt',
+                    color: 'from-amber-500 to-amber-700',
+                    badge: 'Seguridad'
+                },
+                {
+                    title: 'Excesos de Jornada',
+                    value: `${Math.round(c.totalOvertimeEvents)} eventos`,
+                    sub: `~1.6% de días trabajados`,
+                    icon: 'fa-clock-rotate-left',
+                    color: 'from-rose-500 to-rose-700',
+                    badge: 'Control'
+                },
+                {
+                    title: 'Flota Diaria Activa',
+                    value: `${c.activeVehiclesAvgPerDay.toFixed(1)} veh/día`,
+                    sub: `Disponibilidad: ${c.fleetAvailabilityPercent.toFixed(1)}%`,
+                    icon: 'fa-bus',
+                    color: 'from-brand-500 to-slate-700',
+                    badge: 'Promedio'
+                },
+                {
+                    title: 'Días Trabajados',
+                    value: `${Math.round(c.totalDriverDays).toLocaleString('es-CO')} días`,
+                    sub: `${c.daysInMonth} días en ${c.monthName}`,
+                    icon: 'fa-calendar-check',
+                    color: 'from-indigo-500 to-brand-700',
+                    badge: 'Calendario'
+                }
+            ];
+
+            container.innerHTML = kpis.map(k => `
+                <div class="glass-card rounded-2xl p-5 shadow-lg border border-slate-700/60 flex flex-col justify-between hover:border-brand-400/50 transition duration-200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">${k.title}</span>
+                            <div class="text-2xl font-black text-white mt-1 tracking-tight">${k.value}</div>
+                        </div>
+                        <div class="bg-gradient-to-br ${k.color} text-white p-3 rounded-xl shadow-md">
+                            <i class="fa-solid ${k.icon} text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-2 border-t border-slate-700/50 flex items-center justify-between text-xs text-slate-300">
+                        <span>${k.sub}</span>
+                        <span class="bg-slate-800 text-brand-300 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-700">${k.badge}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const data = currentCalculations.vehicleCalculations;
+
+            tbody.innerHTML = data.map(v => `
+                <tr class="hover:bg-slate-800/60 transition">
+                    <td class="py-2.5 px-3 text-slate-400 font-mono">${v.id}</td>
+                    <td class="py-2.5 px-3 font-bold text-white">${v.placa}</td>
+                    <td class="py-2.5 px-3 font-mono text-slate-400">${v.imei}</td>
+                    <td class="py-2.5 px-3 text-center">
+                        <span class="bg-brand-400/20 text-brand-300 font-bold px-2 py-0.5 rounded-full border border-brand-400/30">
+                            ${v.lastDigit}
+                        </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-slate-300">${v.pypAssigned}</td>
+                    <td class="py-2.5 px-3 text-center font-semibold text-amber-400">${v.pypDays} d</td>
+                    <td class="py-2.5 px-3 text-center text-slate-400">${v.maintDays} d</td>
+                    <td class="py-2.5 px-3 text-center font-bold text-emerald-400">${v.operatingDays.toFixed(1)} d</td>
+                    <td class="py-2.5 px-3 text-right font-mono text-slate-200">${Math.round(v.km).toLocaleString('es-CO')}</td>
+                    <td class="py-2.5 px-3 text-right font-mono text-slate-300">${Math.round(v.trips).toLocaleString('es-CO')}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-amber-400">${v.speedingEvents.toFixed(1)}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-rose-400">${v.overtimeEvents.toFixed(1)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('tableSummaryText').innerText = 
+                `Total Kilómetros Flota (52 veh): ${Math.round(currentCalculations.totalKm).toLocaleString('es-CO')} km`;
+        }
+
+        // Filtrar tabla por término de búsqueda
+        function filterTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // Ordenar tabla
+        let sortAsc = true;
+        function sortTable(colIndex) {
+            const table = document.getElementById("fleetTable");
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            
+            rows.sort((a, b) => {
+                const cellA = a.children[colIndex].innerText.replace(/[^0-9.-]+/g,"");
+                const cellB = b.children[colIndex].innerText.replace(/[^0-9.-]+/g,"");
+                const valA = isNaN(cellA) ? a.children[colIndex].innerText : parseFloat(cellA);
+                const valB = isNaN(cellB) ? b.children[colIndex].innerText : parseFloat(cellB);
+                
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            sortAsc = !sortAsc;
+            const tbody = table.querySelector("tbody");
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function renderCharts() {
+            const c = currentCalculations;
+
+            // Chart 1: Disponibilidad por Día del Mes
+            const daysLabels = c.monthCalendar.map(d => `${d.getDate()}/${d.getMonth()+1}`);
+            const dailyActiveCount = c.monthCalendar.map(d => {
+                const restrictedVehicles = FLEET_52_VEHICLES.filter(v => 
+                    isRestrictedDate(getLastNumericDigit(v.placa), d)
+                ).length;
+                return 52 - restrictedVehicles;
+            });
+
+            if (chartInstance1) chartInstance1.destroy();
+            const ctx1 = document.getElementById('chartDisponibilidad').getContext('2d');
+            chartInstance1 = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: daysLabels,
+                    datasets: [{
+                        label: 'Vehículos Disponibles',
+                        data: dailyActiveCount,
+                        backgroundColor: '#67B7BE',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { min: 35, max: 52, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+                    }
+                }
+            });
+
+            // Chart 2: Top 12 Vehículos por Recorrido vs Excesos
+            const topVehicles = [...c.vehicleCalculations]
+                .sort((a,b) => b.km - a.km)
+                .slice(0, 12);
+
+            if (chartInstance2) chartInstance2.destroy();
+            const ctx2 = document.getElementById('chartRiesgo').getContext('2d');
+            chartInstance2 = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: topVehicles.map(v => v.placa),
+                    datasets: [
+                        {
+                            label: 'Km Recorridos',
+                            data: topVehicles.map(v => v.km),
+                            borderColor: '#67B7BE',
+                            backgroundColor: 'rgba(103, 183, 190, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Excesos Velocidad',
+                            data: topVehicles.map(v => v.speedingEvents),
+                            borderColor: '#f59e0b',
+                            backgroundColor: '#f59e0b',
+                            yAxisID: 'y1',
+                            type: 'bar',
+                            barThickness: 12
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 11 } } } },
+                    scales: {
+                        x: { ticks: { color: '#cbd5e1' }, grid: { display: false } },
+                        y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#67B7BE' } },
+                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#f59e0b' } }
+                    }
+                }
+            });
+        }
+
+        function renderCalendarSummary() {
+            const grid = document.getElementById('calendarSummaryGrid');
+            const cal = currentCalculations.monthCalendar;
+
+            grid.innerHTML = cal.map(d => {
+                const dayNum = d.getDate();
+                const dayName = d.toLocaleDateString('es-CO', { weekday: 'short' });
+                const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+
+                const restrictedCount = FLEET_52_VEHICLES.filter(v => 
+                    isRestrictedDate(getLastNumericDigit(v.placa), d)
+                ).length;
+
+                return `
+                    <div class="p-2 rounded-xl border ${isWeekend ? 'bg-slate-900/40 border-slate-800 text-slate-500' : (restrictedCount > 0 ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : 'bg-brand-400/10 border-brand-400/20 text-brand-300')}">
+                        <div class="font-bold text-[11px] uppercase">${dayName} ${dayNum}</div>
+                        <div class="text-[10px] mt-1 font-medium">
+                            ${isWeekend ? 'Sábado/Domingo' : `<span class="font-bold text-amber-400">${restrictedCount} veh. PyP</span>`}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Cambiar rápidamente de mes
+        function setQuickMonth(monthVal) {
+            document.getElementById('monthInput').value = monthVal;
+            recalculateAll();
+        }
+
+        function exportToExcel() {
+            const c = currentCalculations;
+            const wb = XLSX.utils.book_new();
+
+            // Hoja 1: Resumen Ejecutivo
+            const kpiRows = [
+                ["SISTEMA DE CONTROL OPERACIONAL Y SEGURIDAD VIAL"],
+                ["Servicio Especial - Placa Blanca (52 Vehículos)"],
+                [""],
+                ["INDICADOR OPERATIVO", "VALOR CALCULADO", "UNIDAD / DETALLE"],
+                ["Período Seleccionado", c.monthName, "Mes / Año"],
+                ["Días en el Mes", c.daysInMonth, "Días Calendario"],
+                ["Flota Activa en Plataforma GPS", 52, "Vehículos Monitoreados"],
+                ["Promedio Flota Operativa Diaria", parseFloat(c.activeVehiclesAvgPerDay.toFixed(2)), "Vehículos / Día"],
+                ["Porcentaje Disponibilidad Flota", parseFloat(c.fleetAvailabilityPercent.toFixed(2)) + "%", "% Operatividad Real"],
+                ["Total Días Trabajados (Conductores)", Math.round(c.totalDriverDays), "Días - Conductor"],
+                ["Kilometraje Total Recorrido", Math.round(c.totalKm), "Kilómetros"],
+                ["Total Desplazamientos / Viajes", Math.round(c.totalTrips), "Viajes"],
+                ["Excesos de Velocidad Registrados", Math.round(c.totalSpeedingEvents), "Eventos de Riesgo"],
+                ["Tasa Excesos Vel. por 10.000 Km", parseFloat(c.speedRatePer10k.toFixed(2)), "Eventos / 10k Km"],
+                ["Excesos de Jornada Laboral Registrados", Math.round(c.totalOvertimeEvents), "Eventos (1.6% días)"]
+            ];
+            const ws1 = XLSX.utils.aoa_to_sheet(kpiRows);
+
+            // Hoja 2: Detalle 52 Vehículos
+            const detailHeaders = [
+                ["#", "Placa", "IMEI GPS", "Último Dígito", "Día Pico y Placa", "Días PyP Mes", "Días Mantenimiento", "Días Operativos", "Km Recorridos", "Desplazamientos", "Excesos Velocidad", "Excesos Jornada"]
+            ];
+            const detailRows = c.vehicleCalculations.map(v => [
+                v.id,
+                v.placa,
+                v.imei,
+                v.lastDigit,
+                v.pypAssigned,
+                v.pypDays,
+                v.maintDays,
+                parseFloat(v.operatingDays.toFixed(1)),
+                Math.round(v.km),
+                Math.round(v.trips),
+                parseFloat(v.speedingEvents.toFixed(1)),
+                parseFloat(v.overtimeEvents.toFixed(1))
+            ]);
+            const ws2 = XLSX.utils.aoa_to_sheet([...detailHeaders, ...detailRows]);
+
+            // Hoja 3: Calendario Diario
+            const calHeaders = [["Fecha", "Día de la Semana", "Restricción Servicio Especial", "Vehículos Restringidos (PyP)"]];
+            const calRows = c.monthCalendar.map(d => {
+                const count = FLEET_52_VEHICLES.filter(v => isRestrictedDate(getLastNumericDigit(v.placa), d)).length;
+                return [
+                    d.toISOString().split('T')[0],
+                    d.toLocaleDateString('es-CO', { weekday: 'long' }),
+                    (d.getDay() === 0 || d.getDay() === 6) ? "Fin de Semana (Sin PyP)" : "Día Hábil (1/5 Flota en PyP)",
+                    count
+                ];
+            });
+            const ws3 = XLSX.utils.aoa_to_sheet([...calHeaders, ...calRows]);
+
+            // Agregar Hojas
+            XLSX.utils.book_append_sheet(wb, ws1, "Resumen Ejecutivo");
+            XLSX.utils.book_append_sheet(wb, ws2, "Detalle 52 Vehiculos");
+            XLSX.utils.book_append_sheet(wb, ws3, "Calendario Mensual");
+
+            // Nombre del archivo
+            const fileName = `Reporte_Seguridad_Vial_ServicioEspecial_${c.year}_${c.monthStr}_52Veh.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+
+        // Inicializar al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            recalculateAll();
+        });
+    </script>
+</body>
+</html>
